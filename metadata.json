@@ -1,0 +1,5 @@
+{
+  "name": "Remix: MetroBin",
+  "description": "A web application for scheduling and managing waste collection services for hotels, guest houses, and individuals. Users can register, select plans, make payments, and manage their collection schedule. An admin dashboard is available for truckers to view subscribers and mark collections as complete.",
+  "requestFramePermissions": ["geolocation"]
+}
