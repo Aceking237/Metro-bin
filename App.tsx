@@ -32,7 +32,7 @@ const WelcomeScreen: React.FC<{ onGetStarted: () => void; onAdminLogin: () => vo
         <div className="relative z-10 max-w-2xl mx-auto">
             <div className="inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-md rounded-3xl mb-8 border border-white/20 shadow-2xl animate-bounce">
                 <img 
-                    src="/assets/metrobin-logo.png" 
+                    src="https://drive.google.com/uc?export=view&id=19FuyFBx11TeyrJ4gM0nd59lsf5vA9lKw" 
                     alt="MetroBin Logo" 
                     className="w-20 h-20 object-contain"
                     referrerPolicy="no-referrer"
@@ -120,7 +120,7 @@ const RegistrationForm: React.FC<{ userType: UserType; onComplete: (user: Omit<U
     const formHeader = (
         <div className="flex flex-col items-center mb-8">
             <img 
-                src="/assets/metrobin-logo.png" 
+                src="https://drive.google.com/uc?export=view&id=19FuyFBx11TeyrJ4gM0nd59lsf5vA9lKw" 
                 alt="MetroBin Logo" 
                 className="h-12 mb-2 object-contain"
                 referrerPolicy="no-referrer"
@@ -710,7 +710,7 @@ const PaymentScreen: React.FC<{ user: User; onPaid: (method: string) => void; on
             <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
                 <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl max-w-md w-full text-center border border-slate-100">
                     <img 
-                        src="/assets/metrobin-logo.png" 
+                        src="https://drive.google.com/uc?export=view&id=19FuyFBx11TeyrJ4gM0nd59lsf5vA9lKw" 
                         alt="MetroBin Logo" 
                         className="h-16 mx-auto mb-6 object-contain"
                         referrerPolicy="no-referrer"
@@ -1228,7 +1228,7 @@ const App: React.FC = () => {
                         <div className="flex justify-between items-center h-16">
                              <div className="flex items-center space-x-2 text-blue-600 cursor-pointer" onClick={handleLogoClick}>
                                 <img 
-                                    src="/assets/metrobin-logo.png" 
+                                    src="https://drive.google.com/uc?export=view&id=19FuyFBx11TeyrJ4gM0nd59lsf5vA9lKw" 
                                     alt="MetroBin Logo" 
                                     className="h-[36px] object-contain"
                                     referrerPolicy="no-referrer"
@@ -1258,7 +1258,7 @@ const App: React.FC = () => {
                 <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex items-center gap-2">
                         <img 
-                            src="/assets/metrobin-logo.png" 
+                            src="https://drive.google.com/uc?export=view&id=19FuyFBx11TeyrJ4gM0nd59lsf5vA9lKw" 
                             alt="MetroBin Logo" 
                             className="h-8 object-contain"
                             referrerPolicy="no-referrer"
@@ -1305,7 +1305,7 @@ const App: React.FC = () => {
                 <form onSubmit={handleAdminLoginSubmit} className="space-y-6">
                     <div className="flex flex-col items-center mb-6">
                         <img 
-                            src="/assets/metrobin-logo.png" 
+                            src="https://drive.google.com/uc?export=view&id=19FuyFBx11TeyrJ4gM0nd59lsf5vA9lKw" 
                             alt="MetroBin Logo" 
                             className="h-16 mb-2 object-contain"
                             referrerPolicy="no-referrer"
