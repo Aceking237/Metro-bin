@@ -1077,14 +1077,30 @@ const App: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [registeringType, setRegisteringType] = useState<UserType | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
+    const [adminPassword, setAdminPassword] = useState('');
+    const [adminError, setAdminError] = useState('');
     const [allUsers, setAllUsers] = useState<User[]>(ALL_USERS);
     const [reports, setReports] = useState<MissedCollectionReport[]>([]);
 
     const handleGetStarted = () => setScreen('registration');
     
-    const handleAdminLogin = () => {
-        setCurrentUser(null);
-        setScreen('adminDashboard');
+    const handleAdminLoginClick = () => {
+        setIsAdminLoginOpen(true);
+    };
+
+    const handleAdminLoginSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        // In a real app, this would be a server-side check
+        if (adminPassword === 'metroadmin2026') {
+            setAdminPassword('');
+            setAdminError('');
+            setIsAdminLoginOpen(false);
+            setCurrentUser(null);
+            setScreen('adminDashboard');
+        } else {
+            setAdminError('Invalid admin password. Please try again.');
+        }
     };
 
     const handleRegister = (type: UserType) => {
@@ -1153,7 +1169,7 @@ const App: React.FC = () => {
     const renderScreen = () => {
         switch (screen) {
             case 'welcome':
-                return <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLogin} />;
+                return <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLoginClick} />;
             case 'registration':
                 return <RegistrationScreen onRegister={handleRegister} />;
             case 'payment':
@@ -1164,14 +1180,14 @@ const App: React.FC = () => {
                         onBack={() => setScreen('registration')} 
                     />
                 ) : (
-                    <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLogin} />
+                    <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLoginClick} />
                 );
             case 'userDashboard':
-                 return currentUser ? <UserDashboard user={currentUser} onReportMissed={handleReportMissedCollection} /> : <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLogin} />;
+                 return currentUser ? <UserDashboard user={currentUser} onReportMissed={handleReportMissedCollection} /> : <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLoginClick} />;
             case 'adminDashboard':
                 return <AdminDashboard users={allUsers} onUpdateUser={handleUpdateUser} reports={reports} onResolveReport={handleResolveReport} />;
             default:
-                return <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLogin} />;
+                return <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLoginClick} />;
         }
     };
     
@@ -1226,6 +1242,54 @@ const App: React.FC = () => {
                     />
                 </Modal>
             )}
+
+            <Modal
+                isOpen={isAdminLoginOpen}
+                onClose={() => {
+                    setIsAdminLoginOpen(false);
+                    setAdminPassword('');
+                    setAdminError('');
+                }}
+                title="Trucker Admin Login"
+            >
+                <form onSubmit={handleAdminLoginSubmit} className="space-y-6">
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-4">
+                        <p className="text-sm text-blue-700">
+                            Access to the Trucker Dashboard is restricted to authorized personnel only.
+                        </p>
+                    </div>
+                    
+                    <InputGroup label="Admin Access Password" htmlFor="admin-pass">
+                        <input 
+                            type="password" 
+                            id="admin-pass"
+                            value={adminPassword}
+                            onChange={(e) => setAdminPassword(e.target.value)}
+                            className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            placeholder="Enter password"
+                            required
+                            autoFocus
+                        />
+                    </InputGroup>
+                    
+                    {adminError && (
+                        <p className="text-sm text-red-500 font-medium">{adminError}</p>
+                    )}
+                    
+                    <div className="flex flex-col gap-3">
+                        <Button type="submit" className="w-full py-4">
+                            Login to Dashboard
+                        </Button>
+                        <button 
+                            type="button"
+                            onClick={() => setIsAdminLoginOpen(false)}
+                            className="text-gray-500 font-bold hover:text-blue-600 transition-colors py-2"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };
