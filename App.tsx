@@ -14,7 +14,6 @@ import {
   Info,
   ArrowRight
 } from 'lucide-react';
-import TrashIcon from './components/icons/TrashIcon';
 import Button from './components/Button';
 import Modal from './components/Modal';
 import { UserType, IndividualType, User, Neighborhood, Payment, MissedCollectionReport } from './types';
@@ -31,11 +30,11 @@ const WelcomeScreen: React.FC<{ onGetStarted: () => void; onAdminLogin: () => vo
         </div>
 
         <div className="relative z-10 max-w-2xl mx-auto">
-            <div className="inline-flex items-center justify-center p-2 bg-white rounded-[2.5rem] mb-8 shadow-2xl animate-bounce">
+            <div className="inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-md rounded-3xl mb-8 border border-white/20 shadow-2xl animate-bounce">
                 <img 
-                    src="https://cdn-icons-png.flaticon.com/512/3260/3260838.png" 
+                    src="/assets/metrobin-logo.png" 
                     alt="MetroBin Logo" 
-                    className="w-24 h-24 object-contain"
+                    className="w-20 h-20 object-contain"
                     referrerPolicy="no-referrer"
                 />
             </div>
@@ -115,6 +114,20 @@ const InputGroup: React.FC<{ label: string; children: React.ReactNode; htmlFor?:
 
 const RegistrationForm: React.FC<{ userType: UserType; onComplete: (user: Omit<User, 'id'>) => void; onCancel: () => void; }> = ({ userType, onComplete, onCancel }) => {
     const [step, setStep] = useState(1);
+    // ... rest of state
+    
+    // Add logo to top of form
+    const formHeader = (
+        <div className="flex flex-col items-center mb-8">
+            <img 
+                src="/assets/metrobin-logo.png" 
+                alt="MetroBin Logo" 
+                className="h-12 mb-2 object-contain"
+                referrerPolicy="no-referrer"
+            />
+            <h3 className="text-xl font-bold text-gray-900">Create your account</h3>
+        </div>
+    );
     const [name, setName] = useState('');
     const [tel, setTel] = useState('');
     const [location, setLocation] = useState(''); // For hotel/guest-house
@@ -498,6 +511,7 @@ const RegistrationForm: React.FC<{ userType: UserType; onComplete: (user: Omit<U
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
+            {formHeader}
             {userType === UserType.INDIVIDUAL && (
                 <div className="flex items-center justify-between mb-8 px-2">
                     {[1, 2, 3, 4].map((s) => (
@@ -695,9 +709,12 @@ const PaymentScreen: React.FC<{ user: User; onPaid: (method: string) => void; on
         <>
             <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
                 <div className="bg-white p-10 rounded-[2.5rem] shadow-2xl max-w-md w-full text-center border border-slate-100">
-                    <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-6 text-blue-600">
-                        <CheckCircle2 className="w-10 h-10" />
-                    </div>
+                    <img 
+                        src="/assets/metrobin-logo.png" 
+                        alt="MetroBin Logo" 
+                        className="h-16 mx-auto mb-6 object-contain"
+                        referrerPolicy="no-referrer"
+                    />
                     <h2 className="text-3xl font-black text-slate-900 mb-2">Registration Saved</h2>
                     <p className="text-slate-500 mb-8">Choose your preferred payment method to activate your service.</p>
                     
@@ -1211,9 +1228,9 @@ const App: React.FC = () => {
                         <div className="flex justify-between items-center h-16">
                              <div className="flex items-center space-x-2 text-blue-600 cursor-pointer" onClick={handleLogoClick}>
                                 <img 
-                                    src="https://cdn-icons-png.flaticon.com/512/3260/3260838.png" 
+                                    src="/assets/metrobin-logo.png" 
                                     alt="MetroBin Logo" 
-                                    className="h-8 w-8 object-contain"
+                                    className="h-[36px] object-contain"
                                     referrerPolicy="no-referrer"
                                 />
                                 <span className="font-bold text-xl">MetroBin</span>
@@ -1236,6 +1253,29 @@ const App: React.FC = () => {
                 </nav>
             )}
             {renderScreen()}
+            
+            <footer className="bg-white border-t border-gray-100 py-8 mt-auto">
+                <div className="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div className="flex items-center gap-2">
+                        <img 
+                            src="/assets/metrobin-logo.png" 
+                            alt="MetroBin Logo" 
+                            className="h-8 object-contain"
+                            referrerPolicy="no-referrer"
+                        />
+                        <span className="font-bold text-gray-900">MetroBin</span>
+                    </div>
+                    <div className="text-gray-500 text-sm">
+                        © 2026 MetroBin Waste Management. All rights reserved.
+                    </div>
+                    <div className="flex gap-6 text-sm font-medium text-gray-600">
+                        <a href="#" className="hover:text-blue-600 transition-colors">Privacy Policy</a>
+                        <a href="#" className="hover:text-blue-600 transition-colors">Terms of Service</a>
+                        <a href="#" className="hover:text-blue-600 transition-colors">Contact Us</a>
+                    </div>
+                </div>
+            </footer>
+
             {registeringType && (
                 <Modal 
                     isOpen={isModalOpen} 
@@ -1263,6 +1303,15 @@ const App: React.FC = () => {
                 title="Trucker Admin Login"
             >
                 <form onSubmit={handleAdminLoginSubmit} className="space-y-6">
+                    <div className="flex flex-col items-center mb-6">
+                        <img 
+                            src="/assets/metrobin-logo.png" 
+                            alt="MetroBin Logo" 
+                            className="h-16 mb-2 object-contain"
+                            referrerPolicy="no-referrer"
+                        />
+                        <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Admin Portal</span>
+                    </div>
                     <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 mb-4">
                         <p className="text-sm text-blue-700">
                             Access to the Trucker Dashboard is restricted to authorized personnel only.
