@@ -31,8 +31,13 @@ const WelcomeScreen: React.FC<{ onGetStarted: () => void; onAdminLogin: () => vo
         </div>
 
         <div className="relative z-10 max-w-2xl mx-auto">
-            <div className="inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-md rounded-3xl mb-8 border border-white/20 shadow-2xl animate-bounce">
-                <TrashIcon className="w-20 h-20 text-white" />
+            <div className="inline-flex items-center justify-center p-2 bg-white rounded-[2.5rem] mb-8 shadow-2xl animate-bounce">
+                <img 
+                    src="https://cdn-icons-png.flaticon.com/512/3260/3260838.png" 
+                    alt="MetroBin Logo" 
+                    className="w-24 h-24 object-contain"
+                    referrerPolicy="no-referrer"
+                />
             </div>
             <h1 className="text-6xl md:text-7xl font-black mb-6 tracking-tighter leading-none">
                 MetroBin
@@ -1205,7 +1210,12 @@ const App: React.FC = () => {
                     <div className="max-w-6xl mx-auto px-4">
                         <div className="flex justify-between items-center h-16">
                              <div className="flex items-center space-x-2 text-blue-600 cursor-pointer" onClick={handleLogoClick}>
-                                <TrashIcon className="h-8 w-8" />
+                                <img 
+                                    src="https://cdn-icons-png.flaticon.com/512/3260/3260838.png" 
+                                    alt="MetroBin Logo" 
+                                    className="h-8 w-8 object-contain"
+                                    referrerPolicy="no-referrer"
+                                />
                                 <span className="font-bold text-xl">MetroBin</span>
                             </div>
                             <div className="flex items-center space-x-4">
