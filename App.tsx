@@ -19,10 +19,11 @@ import Button from './components/Button';
 import Modal from './components/Modal';
 import { UserType, IndividualType, User, Neighborhood, Payment, MissedCollectionReport } from './types';
 import { HOTEL_PLANS, NEIGHBORHOODS, ALL_USERS } from './constants';
+import { userService, reportService, authService } from '@/services/supabase';
 
 // Helper components defined outside App to prevent re-rendering issues
 
-const WelcomeScreen: React.FC<{ onGetStarted: () => void; onAdminLogin: () => void; }> = ({ onGetStarted, onAdminLogin }) => (
+const WelcomeScreen: React.FC<{ onGetStarted: () => void; onLogin: () => void; onAdminLogin: () => void; }> = ({ onGetStarted, onLogin, onAdminLogin }) => (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-blue-600 text-white text-center p-6 overflow-hidden">
         {/* Background decorative elements */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-10">
@@ -48,8 +49,14 @@ const WelcomeScreen: React.FC<{ onGetStarted: () => void; onAdminLogin: () => vo
                     Get Started <ArrowRight className="w-6 h-6" />
                 </button>
                 <button 
-                    onClick={onAdminLogin}
+                    onClick={onLogin}
                     className="px-10 py-5 bg-blue-700/50 backdrop-blur-md text-white border border-white/20 rounded-2xl font-bold text-xl hover:bg-blue-700/70 transition-all flex items-center justify-center gap-3"
+                >
+                    Login <UserIcon className="w-6 h-6" />
+                </button>
+                <button 
+                    onClick={onAdminLogin}
+                    className="px-10 py-5 bg-blue-800/30 backdrop-blur-md text-white border border-white/10 rounded-2xl font-bold text-xl hover:bg-blue-800/50 transition-all flex items-center justify-center gap-3"
                 >
                     Trucker Login <Building2 className="w-6 h-6" />
                 </button>
@@ -61,6 +68,87 @@ const WelcomeScreen: React.FC<{ onGetStarted: () => void; onAdminLogin: () => vo
         </div>
     </div>
 );
+
+const LoginScreen: React.FC<{ onLogin: (email: string, pass: string) => void; onBack: () => void; }> = ({ onLogin, onBack }) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setIsLoading(true);
+        try {
+            await onLogin(email, password);
+        } catch (err: any) {
+            setError(err.message || 'Login failed. Please check your credentials.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6">
+            <div className="max-w-md w-full bg-white p-10 rounded-[2.5rem] shadow-2xl border border-slate-100">
+                <div className="text-center mb-10">
+                    <div className="inline-flex items-center justify-center p-3 bg-blue-50 rounded-2xl mb-4">
+                        <TrashIcon className="w-10 h-10 text-blue-600" />
+                    </div>
+                    <h2 className="text-3xl font-black text-slate-900">Welcome Back</h2>
+                    <p className="text-slate-500 mt-2">Login to manage your waste collection</p>
+                </div>
+
+                {error && (
+                    <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm mb-6 border border-red-100 flex items-center gap-2">
+                        <Info className="w-4 h-4" /> {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <InputGroup label="Email Address" htmlFor="login-email">
+                        <input 
+                            type="email" 
+                            id="login-email" 
+                            value={email} 
+                            onChange={e => setEmail(e.target.value)} 
+                            required 
+                            placeholder="your@email.com"
+                            className="w-full p-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none" 
+                        />
+                    </InputGroup>
+                    <InputGroup label="Password" htmlFor="login-pass">
+                        <input 
+                            type="password" 
+                            id="login-pass" 
+                            value={password} 
+                            onChange={e => setPassword(e.target.value)} 
+                            required 
+                            placeholder="••••••••"
+                            className="w-full p-4 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none" 
+                        />
+                    </InputGroup>
+                    
+                    <button 
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full py-5 bg-blue-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                        {isLoading ? 'Logging in...' : 'Login'} <ArrowRight className="w-5 h-5" />
+                    </button>
+                    
+                    <button 
+                        type="button"
+                        onClick={onBack}
+                        className="w-full py-4 text-slate-500 font-bold hover:text-slate-700 transition-all"
+                    >
+                        Back to Home
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+};
 
 const RegistrationScreen: React.FC<{ onRegister: (type: UserType) => void }> = ({ onRegister }) => (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6">
@@ -108,13 +196,21 @@ const InputGroup: React.FC<{ label: string; children: React.ReactNode; htmlFor?:
     </div>
 );
 
-const RegistrationForm: React.FC<{ userType: UserType; onComplete: (user: Omit<User, 'id'>) => void; onCancel: () => void; }> = ({ userType, onComplete, onCancel }) => {
+const RegistrationForm: React.FC<{ 
+    userType: UserType; 
+    onComplete: (user: Omit<User, 'id'>, email?: string, password?: string) => void; 
+    onCancel: () => void;
+    hotelPlans: any[];
+    neighborhoods: any[];
+}> = ({ userType, onComplete, onCancel, hotelPlans, neighborhoods }) => {
     const [step, setStep] = useState(1);
     const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [tel, setTel] = useState('');
     const [location, setLocation] = useState(''); // For hotel/guest-house
-    const [planId, setPlanId] = useState(HOTEL_PLANS[0].id); // For hotel/guest-house
-    const [neighborhoodId, setNeighborhoodId] = useState(NEIGHBORHOODS[0].id); // For individual
+    const [planId, setPlanId] = useState(hotelPlans[0]?.id || ''); // For hotel/guest-house
+    const [neighborhoodId, setNeighborhoodId] = useState(neighborhoods[0]?.id || ''); // For individual
     const [hostelCiteName, setHostelCiteName] = useState(''); // For individual
     const [individualType, setIndividualType] = useState<IndividualType>(IndividualType.PRIVATE_HOME);
     const [roomNumber, setRoomNumber] = useState('');
@@ -125,7 +221,7 @@ const RegistrationForm: React.FC<{ userType: UserType; onComplete: (user: Omit<U
     const [isLocating, setIsLocating] = useState(false);
     const [locationError, setLocationError] = useState<string | null>(null);
 
-    const selectedNeighborhood = useMemo(() => NEIGHBORHOODS.find(n => n.id === neighborhoodId), [neighborhoodId]);
+    const selectedNeighborhood = useMemo(() => neighborhoods.find(n => n.id === neighborhoodId), [neighborhoodId, neighborhoods]);
 
     const totalSteps = userType === UserType.INDIVIDUAL ? 4 : 1;
 
@@ -146,7 +242,7 @@ const RegistrationForm: React.FC<{ userType: UserType; onComplete: (user: Omit<U
 
         let user: Omit<User, 'id'>;
         if (userType === UserType.INDIVIDUAL) {
-            const neighborhood = NEIGHBORHOODS.find(n => n.id === neighborhoodId)!;
+            const neighborhood = neighborhoods.find(n => n.id === neighborhoodId)!;
             user = {
                 userType, name, tel, address: neighborhood.name, plan: neighborhood, hostelCiteName,
                 collectionStatus: 'pending',
@@ -156,10 +252,10 @@ const RegistrationForm: React.FC<{ userType: UserType; onComplete: (user: Omit<U
                 ...(individualType === IndividualType.PRIVATE_HOME && { directions, image })
             };
         } else {
-            const plan = HOTEL_PLANS.find(p => p.id === planId)!;
+            const plan = hotelPlans.find(p => p.id === planId)!;
             user = { userType, name, tel, location, plan };
         }
-        onComplete(user);
+        onComplete(user, email, password);
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -224,6 +320,28 @@ const RegistrationForm: React.FC<{ userType: UserType; onComplete: (user: Omit<U
                                 />
                             </div>
                         </InputGroup>
+                        <InputGroup label="Email Address" htmlFor="email">
+                            <input 
+                                type="email" 
+                                id="email" 
+                                value={email} 
+                                onChange={e => setEmail(e.target.value)} 
+                                required 
+                                placeholder="your@email.com"
+                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
+                            />
+                        </InputGroup>
+                        <InputGroup label="Password" htmlFor="password">
+                            <input 
+                                type="password" 
+                                id="password" 
+                                value={password} 
+                                onChange={e => setPassword(e.target.value)} 
+                                required 
+                                placeholder="Min 6 characters"
+                                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" 
+                            />
+                        </InputGroup>
                         <InputGroup label="Telephone Number" htmlFor="tel">
                             <div className="relative">
                                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -246,7 +364,7 @@ const RegistrationForm: React.FC<{ userType: UserType; onComplete: (user: Omit<U
                         <div className="space-y-3">
                             <label className="block text-sm font-medium text-gray-700">Select Your Neighborhood</label>
                             <div className="grid grid-cols-1 gap-3">
-                                {NEIGHBORHOODS.map(n => (
+                                {neighborhoods.map(n => (
                                     <button
                                         key={n.id}
                                         type="button"
@@ -528,7 +646,7 @@ const RegistrationForm: React.FC<{ userType: UserType; onComplete: (user: Omit<U
                     </InputGroup>
                     <InputGroup label="Select Plan" htmlFor="plan">
                         <select id="plan" value={planId} onChange={e => setPlanId(e.target.value)} className="w-full p-3 border border-gray-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500">
-                            {HOTEL_PLANS.map(plan => <option key={plan.id} value={plan.id}>{plan.label} ({plan.details})</option>)}
+                            {hotelPlans.map(plan => <option key={plan.id} value={plan.id}>{plan.name} ({plan.details})</option>)}
                         </select>
                     </InputGroup>
                 </div>
@@ -1077,7 +1195,7 @@ const AdminDashboard: React.FC<{
 
 
 const App: React.FC = () => {
-    type Screen = 'welcome' | 'registration' | 'payment' | 'userDashboard' | 'adminDashboard';
+    type Screen = 'welcome' | 'registration' | 'login' | 'payment' | 'userDashboard' | 'adminDashboard';
     const [screen, setScreen] = useState<Screen>('welcome');
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [registeringType, setRegisteringType] = useState<UserType | null>(null);
@@ -1087,10 +1205,73 @@ const App: React.FC = () => {
     const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
     const [adminPassword, setAdminPassword] = useState('');
     const [adminError, setAdminError] = useState('');
-    const [allUsers, setAllUsers] = useState<User[]>(ALL_USERS);
+    const [allUsers, setAllUsers] = useState<User[]>([]);
     const [reports, setReports] = useState<MissedCollectionReport[]>([]);
+    const [hotelPlans, setHotelPlans] = useState<any[]>(HOTEL_PLANS);
+    const [neighborhoods, setNeighborhoods] = useState<any[]>(NEIGHBORHOODS);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                // Check for current auth user
+                const authUser = await authService.getCurrentUser();
+                if (authUser) {
+                    const profile = await userService.getProfile(authUser.id);
+                    if (profile) {
+                        setCurrentUser(profile);
+                        setScreen('userDashboard');
+                    }
+                }
+
+                const [usersData, reportsData, plansData] = await Promise.all([
+                    userService.getAllUsers(),
+                    reportService.getAllReports(),
+                    userService.getPlans()
+                ]);
+                setAllUsers(usersData);
+                setReports(reportsData);
+                
+                if (plansData.length > 0) {
+                    const hPlans = plansData.filter(p => p.type === 'hotel_plan');
+                    const nPlans = plansData.filter(p => p.type === 'neighborhood');
+                    if (hPlans.length > 0) setHotelPlans(hPlans);
+                    if (nPlans.length > 0) setNeighborhoods(nPlans);
+                }
+            } catch (error) {
+                console.error('Error fetching data from Supabase:', error);
+                // Fallback to mock data if Supabase is not configured or fails
+                if (!userService.isConfigured()) {
+                    setAllUsers(ALL_USERS);
+                }
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     const handleGetStarted = () => setScreen('registration');
+    const handleLoginClick = () => setScreen('login');
+    
+    const handleLogin = async (email: string, pass: string) => {
+        const user = await authService.signIn(email, pass);
+        if (user) {
+            const profile = await userService.getProfile(user.id);
+            if (profile) {
+                setCurrentUser(profile);
+                setScreen('userDashboard');
+            } else {
+                throw new Error('Profile not found. Please contact support.');
+            }
+        }
+    };
+
+    const handleLogout = async () => {
+        await authService.signOut();
+        setCurrentUser(null);
+        setScreen('welcome');
+    };
     
     const handleAdminLoginClick = () => {
         setIsAdminLoginOpen(true);
@@ -1115,19 +1296,37 @@ const App: React.FC = () => {
         setIsModalOpen(true);
     };
 
-    const handleRegistrationComplete = (user: Omit<User, 'id'>) => {
-        const newUser: User = { ...user, id: `user-${Date.now()}`, collectionStatus: 'pending' };
-        setCurrentUser(newUser);
-        setAllUsers(prev => [...prev, newUser]);
-        setIsModalOpen(false);
-        setRegisteringType(null);
-        setScreen('payment');
+    const handleRegistrationComplete = async (user: Omit<User, 'id'>, email?: string, password?: string) => {
+        try {
+            if (!email || !password) throw new Error('Email and password are required');
+            
+            const authUser = await authService.signUp(email, password, user);
+            const profile = await userService.getProfile(authUser.id);
+            
+            if (profile) {
+                setCurrentUser(profile);
+                setAllUsers(prev => [...prev, profile]);
+                setIsModalOpen(false);
+                setRegisteringType(null);
+                setScreen('payment');
+            }
+        } catch (error: any) {
+            console.error('Registration error:', error);
+            alert(error.message || 'Registration failed. Please try again.');
+        }
     };
 
-    const handleUpdateUser = (userId: string, updates: Partial<User>) => {
-        setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updates } : u));
-        if (currentUser && currentUser.id === userId) {
-            setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
+    const handleUpdateUser = async (userId: string, updates: Partial<User>) => {
+        try {
+            await userService.updateUser(userId, updates);
+            setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updates } : u));
+            if (currentUser && currentUser.id === userId) {
+                setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
+            }
+        } catch (error) {
+            console.error('Update error:', error);
+            // Local update fallback
+            setAllUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updates } : u));
         }
     };
 
@@ -1148,29 +1347,27 @@ const App: React.FC = () => {
         setScreen('userDashboard');
     };
 
-    const handleReportMissedCollection = () => {
+    const handleReportMissedCollection = async () => {
         if (!currentUser) return;
         
-        const location = currentUser.location || `${currentUser.address}${currentUser.hostelCiteName ? ` (${currentUser.hostelCiteName})` : ''}`;
-        const schedule = 'details' in currentUser.plan ? currentUser.plan.details : `${(currentUser.plan as Neighborhood).days} | ${(currentUser.plan as Neighborhood).time}`;
-        
-        const newReport: MissedCollectionReport = {
-            id: `report-${Date.now()}`,
-            userId: currentUser.id,
-            userName: currentUser.name,
-            userTel: currentUser.tel,
-            location,
-            schedule,
-            timestamp: new Date().toLocaleString(),
-            status: 'pending'
-        };
-        
-        setReports(prev => [newReport, ...prev]);
-        alert('Report Sent! Our team has been notified and will make up for the missed collection.');
+        try {
+            await reportService.createReport(currentUser.id);
+            const updatedReports = await reportService.getAllReports();
+            setReports(updatedReports);
+            alert('Report Sent! Our team has been notified and will make up for the missed collection.');
+        } catch (error) {
+            console.error('Report error:', error);
+            alert('Failed to send report. Please check your connection.');
+        }
     };
 
-    const handleResolveReport = (reportId: string) => {
-        setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'resolved' } : r));
+    const handleResolveReport = async (reportId: string) => {
+        try {
+            await reportService.resolveReport(reportId);
+            setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'resolved' } : r));
+        } catch (error) {
+            console.error('Resolve error:', error);
+        }
     };
 
     const handleRenewPlan = () => {
@@ -1182,9 +1379,22 @@ const App: React.FC = () => {
     };
     
     const renderScreen = () => {
+        if (isLoading && screen !== 'welcome') {
+            return (
+                <div className="flex items-center justify-center min-h-screen bg-slate-50">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <p className="text-slate-500 font-medium">Loading MetroBin...</p>
+                    </div>
+                </div>
+            );
+        }
+
         switch (screen) {
             case 'welcome':
-                return <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLoginClick} />;
+                return <WelcomeScreen onGetStarted={handleGetStarted} onLogin={handleLoginClick} onAdminLogin={handleAdminLoginClick} />;
+            case 'login':
+                return <LoginScreen onLogin={handleLogin} onBack={() => setScreen('welcome')} />;
             case 'registration':
                 return <RegistrationScreen onRegister={handleRegister} />;
             case 'payment':
@@ -1195,7 +1405,7 @@ const App: React.FC = () => {
                         onBack={() => setScreen('registration')} 
                     />
                 ) : (
-                    <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLoginClick} />
+                    <WelcomeScreen onGetStarted={handleGetStarted} onLogin={handleLoginClick} onAdminLogin={handleAdminLoginClick} />
                 );
             case 'userDashboard':
                  return currentUser ? (
@@ -1206,7 +1416,7 @@ const App: React.FC = () => {
                         onChangeAddress={handleChangeAddress}
                     />
                  ) : (
-                    <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLoginClick} />
+                    <WelcomeScreen onGetStarted={handleGetStarted} onLogin={handleLoginClick} onAdminLogin={handleAdminLoginClick} />
                  );
             case 'adminDashboard':
                 return <AdminDashboard users={allUsers} onUpdateUser={handleUpdateUser} reports={reports} onResolveReport={handleResolveReport} />;
@@ -1218,8 +1428,7 @@ const App: React.FC = () => {
     const isDashboard = screen === 'userDashboard' || screen === 'adminDashboard';
     
     const handleLogoClick = () => {
-        setCurrentUser(null);
-        setScreen('welcome');
+        handleLogout();
     };
 
     return (
@@ -1236,7 +1445,7 @@ const App: React.FC = () => {
                                 {currentUser && screen === 'userDashboard' ? (
                                     <>
                                         <span className="px-3 py-2 rounded-md text-sm font-medium bg-blue-100 text-blue-700">My Dashboard</span>
-                                        <button onClick={handleLogoClick} className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Logout</button>
+                                        <button onClick={handleLogout} className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Logout</button>
                                     </>
                                 ) : screen === 'adminDashboard' ? (
                                     <>
@@ -1263,6 +1472,8 @@ const App: React.FC = () => {
                             setIsModalOpen(false);
                             setRegisteringType(null);
                         }}
+                        hotelPlans={hotelPlans}
+                        neighborhoods={neighborhoods}
                     />
                 </Modal>
             )}
