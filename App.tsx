@@ -732,7 +732,12 @@ const PaymentScreen: React.FC<{ user: User; onPaid: (method: string) => void; on
     );
 };
 
-const UserDashboard: React.FC<{ user: User; onReportMissed: () => void }> = ({ user, onReportMissed }) => {
+const UserDashboard: React.FC<{ 
+    user: User; 
+    onReportMissed: () => void;
+    onRenewPlan: () => void;
+    onChangeAddress: () => void;
+}> = ({ user, onReportMissed, onRenewPlan, onChangeAddress }) => {
     const schedule = 'details' in user.plan ? user.plan.details : `${(user.plan as Neighborhood).days} | ${(user.plan as Neighborhood).time}`;
     return (
          <div className="p-4 md:p-8 bg-gray-50 min-h-screen overflow-y-auto custom-scrollbar">
@@ -745,9 +750,9 @@ const UserDashboard: React.FC<{ user: User; onReportMissed: () => void }> = ({ u
                     </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <Button onClick={() => alert('Functionality to renew plan.')}>Renew Plan</Button>
+                    <Button onClick={onRenewPlan}>Renew Plan</Button>
                     <Button variant="secondary" onClick={onReportMissed}>Report Missed Collection</Button>
-                    <Button variant="secondary" onClick={() => alert('Functionality to change address.')}>Change of Address</Button>
+                    <Button variant="secondary" onClick={onChangeAddress}>Change of Address</Button>
                 </div>
 
                 <div className="bg-white p-6 rounded-lg shadow-md">
@@ -1077,6 +1082,8 @@ const App: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [registeringType, setRegisteringType] = useState<UserType | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isRenewModalOpen, setIsRenewModalOpen] = useState(false);
+    const [isChangeAddressModalOpen, setIsChangeAddressModalOpen] = useState(false);
     const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
     const [adminPassword, setAdminPassword] = useState('');
     const [adminError, setAdminError] = useState('');
@@ -1165,6 +1172,14 @@ const App: React.FC = () => {
     const handleResolveReport = (reportId: string) => {
         setReports(prev => prev.map(r => r.id === reportId ? { ...r, status: 'resolved' } : r));
     };
+
+    const handleRenewPlan = () => {
+        setIsRenewModalOpen(true);
+    };
+
+    const handleChangeAddress = () => {
+        setIsChangeAddressModalOpen(true);
+    };
     
     const renderScreen = () => {
         switch (screen) {
@@ -1183,7 +1198,16 @@ const App: React.FC = () => {
                     <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLoginClick} />
                 );
             case 'userDashboard':
-                 return currentUser ? <UserDashboard user={currentUser} onReportMissed={handleReportMissedCollection} /> : <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLoginClick} />;
+                 return currentUser ? (
+                    <UserDashboard 
+                        user={currentUser} 
+                        onReportMissed={handleReportMissedCollection} 
+                        onRenewPlan={handleRenewPlan}
+                        onChangeAddress={handleChangeAddress}
+                    />
+                 ) : (
+                    <WelcomeScreen onGetStarted={handleGetStarted} onAdminLogin={handleAdminLoginClick} />
+                 );
             case 'adminDashboard':
                 return <AdminDashboard users={allUsers} onUpdateUser={handleUpdateUser} reports={reports} onResolveReport={handleResolveReport} />;
             default:
@@ -1289,6 +1313,71 @@ const App: React.FC = () => {
                         </button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Renew Plan Modal */}
+            <Modal
+                isOpen={isRenewModalOpen}
+                onClose={() => setIsRenewModalOpen(false)}
+                title="Renew Your Plan"
+            >
+                <div className="space-y-6">
+                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                        <p className="text-sm text-blue-800">
+                            Your current plan is still active. You can renew it to extend your service period.
+                        </p>
+                    </div>
+                    <div className="space-y-4">
+                        <p className="font-bold text-gray-900">Select Renewal Period:</p>
+                        <div className="grid grid-cols-1 gap-3">
+                            {['1 Month', '3 Months (5% Off)', '6 Months (10% Off)'].map((period) => (
+                                <button
+                                    key={period}
+                                    className="w-full p-4 text-left border border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all font-medium"
+                                    onClick={() => {
+                                        alert(`Redirecting to payment for ${period} renewal...`);
+                                        setIsRenewModalOpen(false);
+                                    }}
+                                >
+                                    {period}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Change Address Modal */}
+            <Modal
+                isOpen={isChangeAddressModalOpen}
+                onClose={() => setIsChangeAddressModalOpen(false)}
+                title="Change of Address"
+            >
+                <div className="space-y-6">
+                    <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+                        <p className="text-sm text-yellow-800">
+                            Moving to a new location? Update your address to ensure uninterrupted waste collection.
+                        </p>
+                    </div>
+                    <form className="space-y-4" onSubmit={(e) => {
+                        e.preventDefault();
+                        alert('Address update request submitted. Our team will verify and update your profile within 24 hours.');
+                        setIsChangeAddressModalOpen(false);
+                    }}>
+                        <InputGroup label="New Neighborhood" htmlFor="new-neighborhood">
+                            <select id="new-neighborhood" className="w-full p-3 border border-gray-200 rounded-xl bg-white">
+                                {NEIGHBORHOODS.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
+                            </select>
+                        </InputGroup>
+                        <InputGroup label="New Building / Cité Name" htmlFor="new-building">
+                            <input type="text" id="new-building" className="w-full p-3 border border-gray-200 rounded-xl" placeholder="Enter building name" required />
+                        </InputGroup>
+                        <InputGroup label="New Room Number (if applicable)" htmlFor="new-room">
+                            <input type="text" id="new-room" className="w-full p-3 border border-gray-200 rounded-xl" placeholder="e.g. B-202" />
+                        </InputGroup>
+                        <Button type="submit" className="w-full">Submit Change Request</Button>
+                    </form>
+                </div>
             </Modal>
         </div>
     );
